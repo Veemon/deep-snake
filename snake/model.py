@@ -121,7 +121,7 @@ class Agent:
             state = Variable(state, volatile=True).cuda()
             choice = self.primary(state).cpu().data.max(1)[1].view(1, 1)
         else:
-            choice = torch.LongTensor([[random.randrange(2)]])
+            choice = torch.LongTensor([[random.randrange(4)]])
         return int(choice.numpy()[0][0])
 
     def optimize(self):
