@@ -72,29 +72,40 @@ def draw_map(screen, game_map, size, map_val):
 
         pygame.draw.rect(screen, color, (x, y, pixel_size - offset, pixel_size - offset), 0)
 
-def draw_snake(screen, snake_pos, length, velocity, t):
+def draw_snake(screen, snake_pos, length, velocity, t, ai=False):
     val = int(abs(math.sin((length/3)*t)*10))
     for index, i in enumerate(snake_pos):
         body_val = ((length - index) * 10) - (val*5)
-        if velocity != 0:
-            col = (clamp(0 + body_val, 255), clamp(150 + body_val, 255), clamp(180 + body_val, 255))
+        if ai == False:
+            if velocity != 0:
+                col = (clamp(0 + body_val, 255), clamp(150 + body_val, 255), clamp(180 + body_val, 255))
+            else:
+                col = (clamp(0 + body_val, 100), clamp(150 + body_val, 150), clamp(180 + body_val, 180))
         else:
-            col = (clamp(0 + body_val, 100), clamp(150 + body_val, 150), clamp(180 + body_val, 180))
+            if index == 0:
+                col = (200,200,200)
+            else:
+                col = (100,150,180)
         x = i[0] * pixel_size
         y = i[1] * pixel_size
         pygame.draw.rect(screen, col, (x, y, pixel_size - offset, pixel_size - offset), 0)
 
-def draw_fruit(screen, fruit_pos, velocity, t):
+def draw_fruit(screen, fruit_pos, velocity, t, ai=False):
     val = int(abs(math.sin(4*t)*60))
-    if velocity != 0:
-        col = (clamp(0 + val, 255), clamp(190 + val, 255), clamp(118 + val, 255))
+    if ai == False:
+        if velocity != 0:
+            col = (clamp(0 + val, 255), clamp(190 + val, 255), clamp(118 + val, 255))
+        else:
+            col = (clamp(0 + val, 100), clamp(190 + val, 190), clamp(118 + val, 120))
     else:
-        col = (clamp(0 + val, 100), clamp(190 + val, 190), clamp(118 + val, 120))
+        col = (0, 190, 118)
     x = fruit_pos[0] * pixel_size
     y = fruit_pos[1] * pixel_size
     pygame.draw.rect(screen, col, (x, y, pixel_size - offset, pixel_size - offset), 0)
 
-def draw_score(sqr_size, score, score_font, screen, velocity, t):
+def draw_score(sqr_size, score, score_font, screen, velocity, t, ai=False):
+    if ai == True:
+        return
     score_size = score_font.size(score)
     brightness = 10
     if velocity != 0:
@@ -336,9 +347,9 @@ if __name__ == '__main__':
 
             return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
 
-        agent = Agent(num_episodes=100, gamma=0.95)
+        agent = Agent(final_epsilon=0.2, fixed_epsilon=True)
         num = load_checkpoint("saves", agent, version=version)
-
+        print('loaded version {}'.format(num))
 
 
 def main(agent):
@@ -405,9 +416,14 @@ def main(agent):
 
     # Initial Render
     draw_map(screen, game_map, map_size, fill_val + 2)
-    draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
-    draw_fruit(screen, fruit_pos, velocity, t)
-    draw_snake(screen, snake_pos, length, velocity, t)
+    if ai == False:
+        draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
+        draw_fruit(screen, fruit_pos, velocity, t)
+        draw_snake(screen, snake_pos, length, velocity, t)
+    else:
+        draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
+        draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+        draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
     pygame.display.flip()
 
@@ -520,15 +536,23 @@ def main(agent):
                     fruit_pos = game_args.fruit_pos[:]
 
             # draw
-            fill_val = clamp(clamp(start_fill-(t*start_fill), 255)+(math.cos(t)*2)+(start_fill), 253)
+            if ai == False:
+                fill_val = clamp(clamp(start_fill-(t*start_fill), 255)+(math.cos(t)*2)+(start_fill), 253)
+            else:
+                fill_val = start_fill
             screen.fill((fill_val,fill_val,fill_val))
 
             draw_map(screen, game_map, map_size, fill_val + 2)
 
             if velocity != 0:
-                draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
-                draw_fruit(screen, fruit_pos, velocity, t)
-                draw_snake(screen, snake_pos, length, velocity, t)
+                if ai == False:
+                    draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
+                    draw_fruit(screen, fruit_pos, velocity, t)
+                    draw_snake(screen, snake_pos, length, velocity, t)
+                else:
+                    draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
+                    draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+                    draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
             # death notice
             elif agent == False:

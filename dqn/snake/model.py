@@ -81,7 +81,7 @@ class DQN(nn.Module):
 
 class Agent:
     def __init__(self, capacity=0, batch_size=0, num_episodes=1, gamma=0.999, lr=0.1,
-                net_switch=2):
+                net_switch=2, final_epsilon=0.1, fixed_epsilon=False):
 
         # members
         self.capacity = capacity
@@ -89,6 +89,8 @@ class Agent:
         self.num_episodes = num_episodes
         self.net_switch = net_switch
         self.gamma = gamma
+        self.final_epsilon = final_epsilon
+        self.fixed_epsilon = fixed_epsilon
 
         # objects
         self.memory = Memory(capacity)
@@ -100,8 +102,7 @@ class Agent:
 
         # inner
         self.init_epsilon = 0.9
-        self.final_epsilon = 0.1
-        self.last_epsilon = 0
+        self.epsilon = 0
 
         self.num_epochs = 0
 
@@ -109,12 +110,15 @@ class Agent:
         self.memory.push(*args)
 
     def select_action(self,state):
-        self.num_epochs += 1
-
         # epsilon annealing
-        epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
-        epsilon_clip *= math.exp(-1. * self.num_epochs / self.num_episodes)
-        self.last_epsilon = epsilon_clip
+        if self.fixed_epsilon == False:
+            epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
+            epsilon_clip *= math.exp(-1. * self.num_epochs / self.num_episodes)
+        else:
+            epsilon_clip = self.final_epsilon
+
+        # update for graphing
+        self.epsilon = epsilon_clip
 
         # choice
         if random.random() > epsilon_clip:

@@ -45,13 +45,12 @@ def distance_reward(snake_pos, fruit_pos):
     y = y*y
 
     dist = math.sqrt(x + y)
-    norm = (1 - ((dist*dist) / (map_size * map_size)))/4
+    norm = round((1 - ((dist*dist) / (map_size * map_size) * 2)), 3)
 
-    if norm > 1.0:
-        norm = 1.0
-
-    if norm < -0.75:
-        norm = -0.75
+    if norm > 0.975:
+        norm = 0.975
+    if norm < 0.0:
+        norm = 0.0
 
     return norm
 
@@ -79,38 +78,52 @@ def state_tensor(surface):
 
     return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
 
-def live_plot(x, fig, title):
+def live_plot(x, fig, title, limit_y=False):
+
+    if len(x) < 2:
+        return
+
+    # grab figure handle
     plt.figure(fig)
     plt.clf()
+
+    # set y lim
+    if limit_y == True and len(x) > 100:
+        avg = sum(x[-100:]) / 100
+        plt.ylim(0, avg*3)
+
+    # update
     plt.title(title)
     plt.plot(x)
     plt.pause(0.001)
 
 
 def train():
-
     # training parameters
     checkpoint = 1000
 
     batch_size = 256
-    num_epochs = 100000
-    decay_epoch = 150000
+    num_epochs = 60000
+    decay_epoch = 10000
 
-    net_switch = 2000
+    net_switch = 100
 
-    gamma = 0.95
+    gamma = 0.999
     lr = 0.00025
+    final_epsilon = 0.3
 
     # counters
     loss_values = []
     epsiode_rewards = []
+    epsilon_values = []
 
     # initialize agent
-    agent = Agent(capacity=1024,
+    agent = Agent(capacity=2048,
                     batch_size=batch_size,
                     num_episodes=decay_epoch,
                     gamma=gamma,
                     lr=lr,
+                    final_epsilon=final_epsilon,
                     net_switch=net_switch)
 
     # load previous checkpoint
@@ -182,9 +195,9 @@ def train():
 
         # Initial Render
         draw_map(screen, game_map, map_size, fill_val + 2)
-        draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
-        draw_fruit(screen, fruit_pos, velocity, t)
-        draw_snake(screen, snake_pos, length, velocity, t)
+        draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
+        draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+        draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
         pygame.display.flip()
 
@@ -215,30 +228,28 @@ def train():
             fruit_pos, length = collide_fruit(snake_pos, length, fruit_pos, game_map, map_size)
 
             # draw
-            fill_val = clamp(clamp(start_fill-(t*start_fill), 255)+(math.cos(t)*2)+(start_fill), 253)
+            fill_val = start_fill
             screen.fill((fill_val,fill_val,fill_val))
 
             draw_map(screen, game_map, map_size, fill_val + 2)
-            draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t)
-            draw_fruit(screen, fruit_pos, velocity, t)
-            draw_snake(screen, snake_pos, length, velocity, t)
+            draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
+            draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+            draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
             pygame.display.flip()
 
-            # reward no head distance
+            # initial reward
             reward = distance_reward(snake_pos, fruit_pos)
 
             # if growth
             if length - last_length > 0:
                 reward = 1
+                max_reward += 1
+                last_length = length
 
             # punish death
             if velocity == 0:
                 reward = -1
-
-            # update episode stats
-            if reward > max_reward:
-                max_reward = reward
 
             # observe new state
             if velocity != 0:
@@ -255,11 +266,16 @@ def train():
             s = s1
 
             # optimize
-            loss_values.append(agent.optimize())
+            l = agent.optimize()
+            if l is not None:
+                loss_values.append(l)
             if velocity == 0:
+                agent.num_epochs += 1
                 epsiode_rewards.append(max_reward)
-                live_plot(loss_values, 1, 'loss')
+                epsilon_values.append(agent.epsilon)
+                live_plot(loss_values, 1, 'loss', limit_y=True)
                 live_plot(epsiode_rewards, 2, 'episode max rewards')
+                live_plot(epsilon_values, 3, 'epsilon')
                 break
 
         # save model
