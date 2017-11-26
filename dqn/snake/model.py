@@ -40,22 +40,22 @@ class Memory:
 class DQN(nn.Module):
     def __init__(self):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=4, stride=1)
+        self.bn1 = nn.BatchNorm2d(32)
 
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=2, stride=2)
+        self.conv2 = nn.Conv2d(32, 32, kernel_size=4, stride=1)
         self.bn2 = nn.BatchNorm2d(32)
 
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=2, stride=2)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=4, stride=1)
         self.bn3 = nn.BatchNorm2d(32)
 
         # Value
-        self.v1 = nn.Linear(144, 18)
-        self.v2 = nn.Linear(18, 1)
+        self.v1 = nn.Linear(15376, 961)
+        self.v2 = nn.Linear(961, 1)
 
         # Advantage
-        self.a1 = nn.Linear(144, 36)
-        self.a2 = nn.Linear(36, 4)
+        self.a1 = nn.Linear(15376, 961)
+        self.a2 = nn.Linear(961, 4)
 
 
     def forward(self, x):
@@ -66,14 +66,14 @@ class DQN(nn.Module):
 
         # split
         x = x.view(x.size(0), -1)
-        v, a = torch.split(x, 144, 1)
+        v, a = torch.split(x, 15376, 1)
 
         # value
-        v = self.v1(v)
+        v = nn.functional.relu(self.v1(v))
         v = self.v2(v)
 
         # advantage
-        a = self.a1(a)
+        a = nn.functional.relu(self.a1(a))
         a = self.a2(a)
 
         # q-function
@@ -114,6 +114,8 @@ class Agent:
         if self.fixed_epsilon == False:
             epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
             epsilon_clip *= math.exp(-1. * self.num_epochs / self.num_episodes)
+            if epsilon_clip < self.final_epsilon:
+                epsilon_clip = self.final_epsilon
         else:
             epsilon_clip = self.final_epsilon
 
@@ -156,7 +158,7 @@ class Agent:
 
         # compute Q(s1,a') via target network
         q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor))
-        q1[terminal_mask] = self.target(s1).max(1)[0]
+        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], -1, 1)
         q1.volatile = False
 
         # discounted reward

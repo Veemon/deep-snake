@@ -21,10 +21,10 @@ GAME = 1
 
 # Constants
 start_fill = 30
-pixel_size = 25
+pixel_size = 32
 offset = 0
 
-map_size = 16
+map_size = 10
 
 map_empty = 0
 map_wall = 1
@@ -347,7 +347,7 @@ if __name__ == '__main__':
 
             return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
 
-        agent = Agent(final_epsilon=0.2, fixed_epsilon=True)
+        agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
         num = load_checkpoint("saves", agent, version=version)
         print('loaded version {}'.format(num))
 

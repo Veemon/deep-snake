@@ -73,13 +73,15 @@ def state_tensor(surface):
 
     # Resize, and add a batch dimension (BCHW)
     resize = T.Compose([T.ToPILImage(),
-                        T.Scale(32, interpolation=Image.CUBIC),
+                        T.Scale(40, interpolation=Image.CUBIC),
                         T.ToTensor()])
 
     return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
 
-def live_plot(x, fig, title, limit_y=False):
+def live_plot(in_x, fig, title, limit_y=False):
 
+    # little performance boost
+    x = in_x[-100:]
     if len(x) < 2:
         return
 
@@ -102,15 +104,15 @@ def train():
     # training parameters
     checkpoint = 1000
 
-    batch_size = 256
+    batch_size = 32
     num_epochs = 60000
-    decay_epoch = 10000
+    decay_epoch = 75000
 
-    net_switch = 100
+    net_switch = 10
 
     gamma = 0.999
-    lr = 0.00025
-    final_epsilon = 0.3
+    lr = 0.01
+    final_epsilon = 0.2
 
     # counters
     loss_values = []
@@ -239,7 +241,7 @@ def train():
             pygame.display.flip()
 
             # initial reward
-            reward = distance_reward(snake_pos, fruit_pos)
+            reward = 0.0
 
             # if growth
             if length - last_length > 0:
