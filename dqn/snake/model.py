@@ -15,8 +15,6 @@ from torch.autograd import Variable
 import better_exceptions
 import numpy as np
 
-CUDA = torch.cuda.is_available()
-
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
 class Memory:

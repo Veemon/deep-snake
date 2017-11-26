@@ -78,7 +78,7 @@ def state_tensor(surface):
 
     return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
 
-def live_plot(in_x, fig, title, limit_y=False):
+def live_plot(in_x, fig, title):
 
     # little performance boost
     x = in_x[-100:]
@@ -88,11 +88,6 @@ def live_plot(in_x, fig, title, limit_y=False):
     # grab figure handle
     plt.figure(fig)
     plt.clf()
-
-    # set y lim
-    if limit_y == True and len(x) > 100:
-        avg = sum(x[-100:]) / 100
-        plt.ylim(0, avg*3)
 
     # update
     plt.title(title)
@@ -133,40 +128,42 @@ def train():
     if checkpoint_available("saves") == True:
         epoch_offset = load_checkpoint("saves", agent)
 
+
+    # Game Constants
+    global map_size
+    init_pos = map_size/2
+    if init_pos != int(init_pos):
+        map_size -= 1
+        init_pos = map_size/2
+
+    # Font
+    score_font = pygame.font.Font("font/Monoton-Regular.ttf", 160)
+    font_top = pygame.font.Font("font/Monoton-Regular.ttf", 90)
+    font_bot = pygame.font.Font("font/Monoton-Regular.ttf", 40)
+    label_text = ['dead', 'enter-retry', 'escape-exit']
+
+    # Labels
+    aa = 10000
+    col_top = (200,230,245)
+    col_bot = (190,210,225)
+
+    n_labels = len(label_text)
+    label_size = []
+    labels = []
+    for i in range(n_labels):
+        if i == 0:
+            label_size.append(font_top.size(label_text[i]))
+            labels.append(font_top.render(label_text[i], aa, col_top))
+        else:
+            label_size.append(font_bot.size(label_text[i]))
+            labels.append(font_bot.render(label_text[i], aa, col_bot))
+
     for epoch in range(num_epochs + 1):
 
         # Game
-        global map_size
-        init_pos = map_size/2
-        if init_pos != int(init_pos):
-            map_size -= 1
-            init_pos = map_size/2
-
-        fill_val = start_fill
-
         game_map = []
         initialise_map(game_map, map_size)
-
-        # Font
-        score_font = pygame.font.Font("font/Monoton-Regular.ttf", 160)
-        font_top = pygame.font.Font("font/Monoton-Regular.ttf", 90)
-        font_bot = pygame.font.Font("font/Monoton-Regular.ttf", 40)
-        label_text = ['dead', 'enter-retry', 'escape-exit']
-
-        aa = 10000
-        col_top = (200,230,245)
-        col_bot = (190,210,225)
-
-        n_labels = len(label_text)
-        label_size = []
-        labels = []
-        for i in range(n_labels):
-            if i == 0:
-                label_size.append(font_top.size(label_text[i]))
-                labels.append(font_top.render(label_text[i], aa, col_top))
-            else:
-                label_size.append(font_bot.size(label_text[i]))
-                labels.append(font_bot.render(label_text[i], aa, col_bot))
+        fill_val = start_fill
 
         # Systems
         sqr_size = map_size*pixel_size
@@ -203,7 +200,7 @@ def train():
 
         pygame.display.flip()
 
-        # Grab state and set min reward
+        # Grab state and set max reward
         s = state_tensor(screen)
         max_reward = 0
 
@@ -275,7 +272,7 @@ def train():
                 agent.num_epochs += 1
                 epsiode_rewards.append(max_reward)
                 epsilon_values.append(agent.epsilon)
-                live_plot(loss_values, 1, 'loss', limit_y=True)
+                live_plot(loss_values, 1, 'loss')
                 live_plot(epsiode_rewards, 2, 'episode max rewards')
                 live_plot(epsilon_values, 3, 'epsilon')
                 break
