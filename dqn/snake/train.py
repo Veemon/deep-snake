@@ -45,7 +45,7 @@ def distance_reward(snake_pos, fruit_pos):
     y = y*y
 
     dist = math.sqrt(x + y)
-    norm = round((1 - ((dist*dist) / (map_size * map_size) * 2)), 3)
+    norm = 1 - ((dist*dist) / (map_size * map_size) * 2)
 
     if norm > 0.975:
         norm = 0.975
@@ -94,28 +94,33 @@ def live_plot(in_x, fig, title):
     plt.plot(x)
     plt.pause(0.001)
 
+# counters
+loss_values = []
+epsiode_rewards = []
+epsilon_values = []
 
 def train():
     # training parameters
-    checkpoint = 1000
+    checkpoint = 5000
 
     batch_size = 32
     num_epochs = 60000
-    decay_epoch = 75000
+    decay_epoch = 100000
 
     net_switch = 10
 
-    gamma = 0.999
-    lr = 0.01
+    gamma = 0.95
+    lr = 0.00025
+
     final_epsilon = 0.2
 
     # counters
-    loss_values = []
-    epsiode_rewards = []
-    epsilon_values = []
+    global loss_values
+    global epsiode_rewards
+    global epsilon_values
 
     # initialize agent
-    agent = Agent(capacity=2048,
+    agent = Agent(capacity=4096,
                     batch_size=batch_size,
                     num_episodes=decay_epoch,
                     gamma=gamma,
@@ -127,7 +132,7 @@ def train():
     epoch_offset = 0
     if checkpoint_available("saves") == True:
         epoch_offset = load_checkpoint("saves", agent)
-
+        agent.init_epsilon = 0.5
 
     # Game Constants
     global map_size
@@ -135,28 +140,6 @@ def train():
     if init_pos != int(init_pos):
         map_size -= 1
         init_pos = map_size/2
-
-    # Font
-    score_font = pygame.font.Font("font/Monoton-Regular.ttf", 160)
-    font_top = pygame.font.Font("font/Monoton-Regular.ttf", 90)
-    font_bot = pygame.font.Font("font/Monoton-Regular.ttf", 40)
-    label_text = ['dead', 'enter-retry', 'escape-exit']
-
-    # Labels
-    aa = 10000
-    col_top = (200,230,245)
-    col_bot = (190,210,225)
-
-    n_labels = len(label_text)
-    label_size = []
-    labels = []
-    for i in range(n_labels):
-        if i == 0:
-            label_size.append(font_top.size(label_text[i]))
-            labels.append(font_top.render(label_text[i], aa, col_top))
-        else:
-            label_size.append(font_bot.size(label_text[i]))
-            labels.append(font_bot.render(label_text[i], aa, col_bot))
 
     for epoch in range(num_epochs + 1):
 
@@ -194,7 +177,6 @@ def train():
 
         # Initial Render
         draw_map(screen, game_map, map_size, fill_val + 2)
-        draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
         draw_fruit(screen, fruit_pos, velocity, t, ai=True)
         draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
@@ -231,14 +213,13 @@ def train():
             screen.fill((fill_val,fill_val,fill_val))
 
             draw_map(screen, game_map, map_size, fill_val + 2)
-            draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
             draw_fruit(screen, fruit_pos, velocity, t, ai=True)
             draw_snake(screen, snake_pos, length, velocity, t, ai=True)
 
             pygame.display.flip()
 
             # initial reward
-            reward = 0.0
+            reward = 0
 
             # if growth
             if length - last_length > 0:
@@ -246,20 +227,17 @@ def train():
                 max_reward += 1
                 last_length = length
 
-            # punish death
-            if velocity == 0:
-                reward = -1
-
             # observe new state
             if velocity != 0:
                 s1 = state_tensor(screen)
             else:
+                reward = -1
                 s1 = None
 
             # memorize
             a = torch.LongTensor([[desired]])
             r = torch.FloatTensor([reward])
-            agent.push(s, a, s1, r)
+            agent.memory.push(s, a, s1, r)
 
             # update
             s = s1
@@ -269,7 +247,6 @@ def train():
             if l is not None:
                 loss_values.append(l)
             if velocity == 0:
-                agent.num_epochs += 1
                 epsiode_rewards.append(max_reward)
                 epsilon_values.append(agent.epsilon)
                 live_plot(loss_values, 1, 'loss')
@@ -282,13 +259,16 @@ def train():
             save_checkpoint(agent, 'saves/epoch_{}.model'.format(epoch_offset + epoch))
 
 if __name__ == '__main__':
-    try:
-        pygame.init()
-        pygame.display.set_caption('Snek', 'None')
+    pygame.init()
+    pygame.display.set_caption('Snek', 'None')
 
-        plt.ion()
+    plt.ion()
 
-        train()
-        input()
-    except KeyboardInterrupt:
-        pass
+    train()
+
+    plt.plot(loss_values)
+    plt.plot(epsiode_rewards)
+    plt.plot(epsilon_values)
+    plt.show()
+
+    input()

@@ -329,28 +329,11 @@ if __name__ == '__main__':
         import torchvision.transforms as T
 
         from PIL import Image
+        from train import state_tensor
 
-
-        def state_tensor(surface):
-            # RGB Array -> Channels, Height, Width
-            pixels = pygame.surfarray.array3d(surface).transpose((2, 0, 1))
-
-            # Convert to float, rescare, convert to torch tensor
-            # (this doesn't require a copy)
-            pixels = np.ascontiguousarray(pixels, dtype=np.float32) / 255
-            pixels = torch.from_numpy(pixels)
-
-            # Resize, and add a batch dimension (BCHW)
-            resize = T.Compose([T.ToPILImage(),
-                                T.Scale(32, interpolation=Image.CUBIC),
-                                T.ToTensor()])
-
-            return resize(pixels).unsqueeze(0).type(torch.FloatTensor)
-
-        agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
+        agent = Agent(final_epsilon=0.1, fixed_epsilon=True)
         num = load_checkpoint("saves", agent, version=version)
         print('loaded version {}'.format(num))
-
 
 def main(agent):
 

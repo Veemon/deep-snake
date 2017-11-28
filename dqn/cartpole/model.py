@@ -69,11 +69,11 @@ class DQN(nn.Module):
         v, a = torch.split(x, 224, 1)
 
         # value
-        v = self.v1(v)
+        v = nn.functional.relu(self.v1(v))
         v = self.v2(v)
 
         # advantage
-        a = self.a1(a)
+        a = nn.functional.relu(self.a1(a))
         a = self.a2(a)
 
         # q-function

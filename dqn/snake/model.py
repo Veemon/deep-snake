@@ -4,6 +4,7 @@ import copy
 import operator
 import random
 import math
+import time
 
 from collections import namedtuple
 
@@ -11,6 +12,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
+torch.manual_seed(int(time.time()))
+torch.cuda.manual_seed_all(int(time.time()))
 
 import better_exceptions
 import numpy as np
@@ -38,22 +41,22 @@ class Memory:
 class DQN(nn.Module):
     def __init__(self):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=4, stride=1)
-        self.bn1 = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
+        self.bn1 = nn.BatchNorm2d(16)
 
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=4, stride=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
         self.bn2 = nn.BatchNorm2d(32)
 
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=4, stride=1)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
         self.bn3 = nn.BatchNorm2d(32)
 
         # Value
-        self.v1 = nn.Linear(15376, 961)
-        self.v2 = nn.Linear(961, 1)
+        self.v1 = nn.Linear(64, 32)
+        self.v2 = nn.Linear(32, 1)
 
         # Advantage
-        self.a1 = nn.Linear(15376, 961)
-        self.a2 = nn.Linear(961, 4)
+        self.a1 = nn.Linear(64, 32)
+        self.a2 = nn.Linear(32, 4)
 
 
     def forward(self, x):
@@ -64,7 +67,7 @@ class DQN(nn.Module):
 
         # split
         x = x.view(x.size(0), -1)
-        v, a = torch.split(x, 15376, 1)
+        v, a = torch.split(x, 64, 1)
 
         # value
         v = nn.functional.relu(self.v1(v))
@@ -104,9 +107,6 @@ class Agent:
 
         self.num_epochs = 0
 
-    def push(self, *args):
-        self.memory.push(*args)
-
     def select_action(self,state):
         # epsilon annealing
         if self.fixed_epsilon == False:
@@ -123,7 +123,8 @@ class Agent:
         # choice
         if random.random() > epsilon_clip:
             state = Variable(state, volatile=True).cuda()
-            choice = self.primary(state).cpu().data.max(1)[1].view(1, 1)
+            q_vals = self.primary(state).cpu()
+            choice = q_vals.data.max(1)[1].view(1, 1)
         else:
             choice = torch.LongTensor([[random.randrange(4)]])
         return int(choice.numpy()[0][0])
@@ -133,6 +134,8 @@ class Agent:
         # leave if too early
         if self.memory.length() < self.batch_size:
             return
+        else:
+            self.num_epochs += 1
 
         # get batch sample
         samples = self.memory.sample(self.batch_size)
@@ -154,9 +157,9 @@ class Agent:
         # computate Q(s,a) via primary network
         q = self.primary(s).gather(1, a)
 
-        # compute Q(s1,a') via target network
+        # compute Q(s',a') via target network
         q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor))
-        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], -1, 1)
+        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], min=-1.0, max=1.0)
         q1.volatile = False
 
         # discounted reward
