@@ -413,10 +413,6 @@ def main(agent):
     while 1:
         t0 = time.clock()
 
-        # Grab state
-        if agent != False:
-            s = state_tensor(screen)
-
         # input
         body_direction = get_body_direction(game_args.snake_pos)
         for event in pygame.event.get():
@@ -462,7 +458,7 @@ def main(agent):
 
         # AI - action
         if agent != False:
-            desired = agent.select_action(s)
+            desired = agent.select_action(state_tensor(screen))
             if desired == up and body_direction != down:
                 direction = up
             if desired == right and body_direction != left:

@@ -112,7 +112,7 @@ def train():
     gamma = 0.95
     lr = 0.00025
 
-    final_epsilon = 0.2
+    final_epsilon = 0.05
 
     # counters
     global loss_values
