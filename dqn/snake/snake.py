@@ -331,7 +331,7 @@ if __name__ == '__main__':
         from PIL import Image
         from train import state_tensor
 
-        agent = Agent(final_epsilon=0.1, fixed_epsilon=True)
+        agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
         num = load_checkpoint("saves", agent, version=version)
         print('loaded version {}'.format(num))
 
@@ -381,6 +381,10 @@ def main(agent):
     # Systems
     tick_rate = game_args.tick_rate
     move_rate = game_args.move_rate
+    agent_slowdown = 1.5
+
+    if agent != False:
+        move_rate *= agent_slowdown
 
     last_t = game_args.last_t
     last_move = game_args.last_move
@@ -479,7 +483,8 @@ def main(agent):
                 # if growth
                 if length - last_length > 0:
                     # increase speed
-                    move_rate -= (move_rate * 0.05)
+                    if agent != False:
+                        move_rate -= (move_rate * 0.05)
                     last_length = length
 
                 # move - timing
@@ -492,12 +497,22 @@ def main(agent):
             # agent death
             if agent != False:
                 if velocity == 0:
+                    # Render for effect
+                    screen.fill((fill_val,fill_val,fill_val))
+                    draw_map(screen, game_map, map_size, fill_val + 2)
+                    draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
+                    draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+                    draw_snake(screen, snake_pos, length, velocity, t, ai=True)
+                    pygame.display.flip()
+
                     # Game Arg Unpacking
                     game_args = reset_states(game_map, map_size)
 
                     # Systems
                     tick_rate = game_args.tick_rate
                     move_rate = game_args.move_rate
+
+                    move_rate *= agent_slowdown
 
                     last_t = game_args.last_t
                     last_move = game_args.last_move
@@ -513,6 +528,8 @@ def main(agent):
 
                     snake_pos = game_args.snake_pos[:]
                     fruit_pos = game_args.fruit_pos[:]
+
+                    time.sleep(0.375)
 
             # draw
             if ai == False:

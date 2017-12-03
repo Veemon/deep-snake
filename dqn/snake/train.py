@@ -104,8 +104,8 @@ def train():
     checkpoint = 5000
 
     batch_size = 32
-    num_epochs = 60000
-    decay_epoch = 100000
+    num_epochs = 100000
+    decay_epoch = 750000
 
     net_switch = 10
 
@@ -128,11 +128,22 @@ def train():
                     final_epsilon=final_epsilon,
                     net_switch=net_switch)
 
+    # CLI
+    exploit = False
+    for arg in sys.argv:
+        if arg == '--exploit':
+            exploit = True
+
     # load previous checkpoint
     epoch_offset = 0
     if checkpoint_available("saves") == True:
-        epoch_offset = load_checkpoint("saves", agent)
-        agent.init_epsilon = 0.5
+        num = epoch_offset = load_checkpoint("saves", agent)
+        print('loaded version {}'.format(num))
+        if exploit == False:
+            agent.init_epsilon = 0.75
+        else:
+            agent.init_epsilon = 0.15
+            agent.fixed_epsilon = True
 
     # Game Constants
     global map_size
