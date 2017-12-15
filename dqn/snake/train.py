@@ -29,7 +29,6 @@ import numpy as np
 from snake import *
 from model import *
 
-
 def distance_reward(snake_pos, fruit_pos):
     head = snake_pos[0]
     hx = head[0]
@@ -109,7 +108,7 @@ def train():
 
     net_switch = 10
 
-    gamma = 0.95
+    gamma = 0.99
     lr = 0.00025
 
     final_epsilon = 0.05
@@ -138,12 +137,13 @@ def train():
     epoch_offset = 0
     if checkpoint_available("saves") == True:
         num = epoch_offset = load_checkpoint("saves", agent)
-        print('loaded version {}'.format(num))
+        print('loaded version {} ... '.format(num), end='')
         if exploit == False:
+            print()
             agent.init_epsilon = 0.75
         else:
-            agent.init_epsilon = 0.15
-            agent.fixed_epsilon = True
+            print('exploit mode')
+            agent.init_epsilon = 0.3
 
     # Game Constants
     global map_size
@@ -242,7 +242,6 @@ def train():
             if velocity != 0:
                 s1 = state_tensor(screen)
             else:
-                reward = -1
                 s1 = None
 
             # memorize

@@ -24,8 +24,6 @@ start_fill = 30
 pixel_size = 32
 offset = 0
 
-map_size = 10
-
 map_empty = 0
 map_wall = 1
 map_fruit = 2
@@ -35,6 +33,9 @@ up = 0
 right = 1
 down = 2
 left = 3
+
+# Depends on CLI, will change to even if odd
+map_size = 10
 
 def clamp(a, b):
     if a <= 0:
@@ -307,9 +308,26 @@ if __name__ == '__main__':
     agent = False
     for arg in sys.argv:
         if arg[0:2] == 'ai':
+            # Main loop mode identifier
             ai = True
+
+            # Versioning shortcuts
+            thousand = False
+            if arg[-1] == 'k':
+                thousand = True
+
+            million = False
+            if arg[-1] == 'm':
+                million = True
+
             try:
-                version = int(arg[3:])
+                if million or thousand:
+                    version = int(arg[3:-1])
+                else:
+                    version = int(arg[3:])
+
+                version *= int(1e6) if million else 1
+                version *= int(1e3) if thousand else 1
             except:
                 pass
 
