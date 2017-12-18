@@ -338,22 +338,8 @@ if __name__ == '__main__':
                 pass
 
     if ai == True:
-
-        from model import *
-
-        import torch
-        import torch.nn as nn
-        import torch.optim as optim
-        import torch.nn.functional as F
-        from torch.autograd import Variable
-        import torchvision.transforms as T
-
-        from PIL import Image
-        from train import state_tensor
-
-        agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
-        num = load_checkpoint("saves", agent, version=version)
-        print('loaded version {}'.format(num))
+        # TODO implement
+        from pyneat import pyneat
 
     elif map_set == False:
         map_size = 16
