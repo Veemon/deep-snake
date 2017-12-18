@@ -231,7 +231,7 @@ def collapse_data(game_map, fruit_pos, snake_pos):
 
     for i in range(len(snake_pos)):
         snake_index = (snake_pos[i][1] * map_size) + snake_pos[i][0]
-        snake_decay = map_snake - (0.5/len(snake_pos))*i
+        snake_decay = map_snake if i == 0 else map_snake - 0.5
         flattened[int(snake_index)] = snake_decay
 
     return np.asarray(flattened, dtype=np.float32)
@@ -338,7 +338,7 @@ if __name__ == '__main__':
                 pass
 
     if ai == True:
-        # TODO implement
+        # TODO implement after saving
         from pyneat import pyneat
 
     elif map_set == False:

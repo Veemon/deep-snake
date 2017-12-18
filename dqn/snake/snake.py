@@ -9,10 +9,6 @@ import pygame
 
 import numpy as np
 
-from colorama import Fore, Back, Style
-from colorama import init
-init(autoreset=True)
-
 # INDEXES
 SYSTEMS = 0
 GAME = 1
@@ -223,19 +219,6 @@ def new_fruit(game_map, map_size, snake, length):
 
     return fruit_pos
 
-def collapse_data(game_map, fruit_pos, snake_pos):
-    flattened = game_map[:]
-
-    fruit_index = (fruit_pos[1] * map_size) + fruit_pos[0]
-    flattened[int(fruit_index)] = map_fruit
-
-    for i in range(len(snake_pos)):
-        snake_index = (snake_pos[i][1] * map_size) + snake_pos[i][0]
-        snake_decay = map_snake - (0.5/len(snake_pos))*i
-        flattened[int(snake_index)] = snake_decay
-
-    return np.asarray(flattened, dtype=np.float32)
-
 def reset_states(game_map, map_size):
 
     args = ARGS()
@@ -249,33 +232,6 @@ def reset_states(game_map, map_size):
     args.fruit_pos = new_fruit(game_map, map_size, args.snake_pos, args.length)
 
     return args
-
-def print_state(s):
-    for i in range(map_size):
-        for j in range(map_size):
-            ts = " {0:.1f} ".format(s[(i*map_size) + j])
-
-            # empty
-            if s[(i*map_size) + j] == 0.0:
-                print(Fore.WHITE + Style.DIM + ts, end='')
-
-            # walls
-            elif s[(i*map_size) + j] == 1.0:
-                print(Fore.BLUE + Style.DIM + ts, end='')
-
-            # fruit
-            elif s[(i*map_size) + j] == 2.0:
-                print(Fore.GREEN + Style.BRIGHT + ts, end='')
-
-            # snake head
-            elif s[(i*map_size) + j] == 3.0:
-                print(Fore.WHITE + Style.BRIGHT + ts, end='')
-
-            # snake body (& soul)
-            else:
-                print(Fore.WHITE + ts, end='')
-
-        print()
 
 class ARGS():
     def __init__(self):
