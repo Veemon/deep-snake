@@ -100,15 +100,15 @@ epsilon_values = []
 
 def train():
     # training parameters
-    checkpoint = 5000
+    checkpoint = 1000
 
-    batch_size = 32
-    num_epochs = 100000
-    decay_epoch = 750000
+    batch_size = 128
+    num_epochs = 200000
+    decay_epoch = 400000
 
-    net_switch = 10
+    net_switch = 30
 
-    gamma = 0.99
+    gamma = 0.65
     lr = 0.00025
 
     final_epsilon = 0.05
@@ -242,6 +242,7 @@ def train():
             if velocity != 0:
                 s1 = state_tensor(screen)
             else:
+                reward = -1
                 s1 = None
 
             # memorize

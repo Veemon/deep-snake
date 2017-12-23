@@ -158,12 +158,13 @@ class Agent:
         q = self.primary(s).gather(1, a)
 
         # compute Q(s',a') via target network
-        q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor))
-        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], min=0.0, max=1.0)
+        q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor).add(-1))
+        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], min=-1.0, max=1.0)
         q1.volatile = False
 
         # discounted reward
-        target = (q1 * self.gamma) + r
+        q1[terminal_mask] = (q1[terminal_mask] * self.gamma) + r[terminal_mask]
+        target = q1.clone()
 
         # compute loss
         loss = nn.functional.smooth_l1_loss(q, target)
