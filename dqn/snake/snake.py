@@ -261,8 +261,9 @@ if __name__ == '__main__':
     version = 0
     agent = False
     map_set = False
+    debug = False
     for arg in sys.argv:
-        if arg[0:2] == 'ai':
+        if arg[0:4] == '--ai':
             # Main loop mode identifier
             ai = True
 
@@ -277,21 +278,24 @@ if __name__ == '__main__':
 
             try:
                 if million or thousand:
-                    version = int(arg[3:-1])
+                    version = int(arg[5:-1])
                 else:
-                    version = int(arg[3:])
+                    version = int(arg[5:])
 
                 version *= int(1e6) if million else 1
                 version *= int(1e3) if thousand else 1
             except:
                 pass
 
-        if arg[0:4] == 'size':
+        if arg[0:6] == '--size':
             try:
-                map_size = int(arg[5:])
+                map_size = int(arg[7:])
                 map_set = True
             except:
                 pass
+
+        if arg[0:7] == '--debug':
+            debug = True
 
     if ai == True:
 
@@ -308,13 +312,23 @@ if __name__ == '__main__':
         from train import state_tensor
 
         agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
-        num = load_checkpoint("saves", agent, version=version)
-        print('loaded version {}'.format(num))
+        try:
+            num = load_checkpoint("saves", agent, version=version)
+            print('loaded version {}'.format(num))
+        except:
+            print("could not load an ai, have you trained one?")
+            sys.exit()
 
     elif map_set == False:
         map_size = 16
 
 def main(agent):
+
+    # Directions
+    global up
+    global right
+    global down
+    global left
 
     # Game
     global map_size
@@ -441,15 +455,31 @@ def main(agent):
 
         # AI - action
         if agent != False:
-            desired = agent.select_action(state_tensor(screen))
-            if desired == up and body_direction != down:
-                direction = up
-            if desired == right and body_direction != left:
-                direction = right
-            if desired == down and body_direction != up:
-                direction = down
-            if desired == left and body_direction != right:
-                direction = left
+            if debug:
+                desired, q_vals = agent.select_action(state_tensor(screen), debug=True)
+                desired_text = 'no change in direction'
+                if desired == up and body_direction != down:
+                    direction = up
+                    desired_text = 'up'
+                if desired == right and body_direction != left:
+                    direction = right
+                    desired_text = 'right'
+                if desired == down and body_direction != up:
+                    direction = down
+                    desired_text = 'down'
+                if desired == left and body_direction != right:
+                    direction = left
+                    desired_text = 'left'
+            else:
+                desired = agent.select_action(state_tensor(screen))
+                if desired == up and body_direction != down:
+                    direction = up
+                if desired == right and body_direction != left:
+                    direction = right
+                if desired == down and body_direction != up:
+                    direction = down
+                if desired == left and body_direction != right:
+                    direction = left
 
         if(t >= last_t + tick_rate):
             if(t >= last_move + move_rate):
@@ -483,6 +513,25 @@ def main(agent):
                     draw_fruit(screen, fruit_pos, velocity, t, ai=True)
                     draw_snake(screen, snake_pos, length, velocity, t, ai=True)
                     pygame.display.flip()
+
+                    # Debug
+                    if debug:
+                        try:
+                            if None not in q_vals:
+                                print('\nDeath: Desired - {}'.format(desired_text))
+                                print('up:\t{}'.format(q_vals[up].data.numpy()[0]))
+                                print('down:\t{}'.format(q_vals[down].data.numpy()[0]))
+                                print('left:\t{}'.format(q_vals[left].data.numpy()[0]))
+                                print('right:\t{}'.format(q_vals[right].data.numpy()[0]))
+                            else:
+                                print("Death: Random action.")
+                        except:
+                            print('\nDeath: Desired - {}'.format(desired_text))
+                            print('up:\t{}'.format(q_vals[up].data.numpy()[0]))
+                            print('down:\t{}'.format(q_vals[down].data.numpy()[0]))
+                            print('left:\t{}'.format(q_vals[left].data.numpy()[0]))
+                            print('right:\t{}'.format(q_vals[right].data.numpy()[0]))
+                        input()
 
                     # Game Arg Unpacking
                     game_args = reset_states(game_map, map_size)

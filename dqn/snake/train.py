@@ -104,12 +104,12 @@ def train():
 
     batch_size = 128
     num_epochs = 200000
-    decay_epoch = 400000
+    decay_epoch = 350000
 
     net_switch = 30
 
-    gamma = 0.65
-    lr = 0.00025
+    gamma = 0.95
+    lr = 0.01
 
     final_epsilon = 0.05
 

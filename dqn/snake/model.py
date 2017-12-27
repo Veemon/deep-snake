@@ -107,7 +107,7 @@ class Agent:
 
         self.num_epochs = 0
 
-    def select_action(self,state):
+    def select_action(self,state, debug=False):
         # epsilon annealing
         if self.fixed_epsilon == False:
             epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
@@ -125,9 +125,15 @@ class Agent:
             state = Variable(state, volatile=True).cuda()
             q_vals = self.primary(state).cpu()
             choice = q_vals.data.max(1)[1].view(1, 1)
+            q_vals = torch.t(q_vals)
         else:
+            q_vals = [None, None, None, None]
             choice = torch.LongTensor([[random.randrange(4)]])
-        return int(choice.numpy()[0][0])
+
+        if debug == False:
+            return int(choice.numpy()[0][0])
+        else:
+            return int(choice.numpy()[0][0]), q_vals
 
     def optimize(self):
 
@@ -159,7 +165,7 @@ class Agent:
 
         # compute Q(s',a') via target network
         q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor).add(-1))
-        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], min=-1.0, max=1.0)
+        q1[terminal_mask] = self.target(s1).max(1)[0]
         q1.volatile = False
 
         # discounted reward
