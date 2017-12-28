@@ -108,10 +108,10 @@ def train():
 
     net_switch = 30
 
-    gamma = 0.95
-    lr = 0.01
+    gamma = 0.65
+    lr = 0.001
 
-    final_epsilon = 0.05
+    final_epsilon = 0.01
 
     # counters
     global loss_values
@@ -219,16 +219,6 @@ def train():
             velocity = collide_wall(game_map, map_size, snake_pos, velocity)
             fruit_pos, length = collide_fruit(snake_pos, length, fruit_pos, game_map, map_size)
 
-            # draw
-            fill_val = start_fill
-            screen.fill((fill_val,fill_val,fill_val))
-
-            draw_map(screen, game_map, map_size, fill_val + 2)
-            draw_fruit(screen, fruit_pos, velocity, t, ai=True)
-            draw_snake(screen, snake_pos, length, velocity, t, ai=True)
-
-            pygame.display.flip()
-
             # initial reward
             reward = 0
 
@@ -238,11 +228,24 @@ def train():
                 max_reward += 1
                 last_length = length
 
+            # if death
+            if velocity == 0:
+                reward = -1
+
+            # draw
+            fill_val = start_fill
+            screen.fill((fill_val,fill_val,fill_val))
+
+            draw_map(screen, game_map, map_size, fill_val + 2)
+            draw_fruit(screen, fruit_pos, velocity, t, ai=True)
+            draw_snake(screen, snake_pos, length, velocity, t, ai=True, reward=reward)
+
+            pygame.display.flip()
+
             # observe new state
             if velocity != 0:
                 s1 = state_tensor(screen)
             else:
-                reward = -1
                 s1 = None
 
             # memorize

@@ -67,7 +67,7 @@ def draw_map(screen, game_map, size, map_val):
 
         pygame.draw.rect(screen, color, (x, y, pixel_size - offset, pixel_size - offset), 0)
 
-def draw_snake(screen, snake_pos, length, velocity, t, ai=False):
+def draw_snake(screen, snake_pos, length, velocity, t, ai=False, reward=0):
     val = int(abs(math.sin((length/3)*t)*10))
     for index, i in enumerate(snake_pos):
         body_val = ((length - index) * 10) - (val*5)
@@ -78,11 +78,29 @@ def draw_snake(screen, snake_pos, length, velocity, t, ai=False):
                 col = (clamp(0 + body_val, 100), clamp(150 + body_val, 150), clamp(180 + body_val, 180))
         else:
             if index == 0:
-                col = (200,200,200)
+                # Got fruit
+                if reward == 1:
+                    col = (90,220,220)
+
+                # Normal head
+                elif reward == 0:
+                    col = (210,210,210)
+
+                # Just Died
+                elif reward == -1:
+                    col = (75,85,120)
             else:
-                col = (100,150,180)
+                # Normal body
+                if reward != -1:
+                    col = (100,150,180)
+
+                # Just Died
+                else:
+                    col = (75,85,120)
+
         x = i[0] * pixel_size
         y = i[1] * pixel_size
+
         pygame.draw.rect(screen, col, (x, y, pixel_size - offset, pixel_size - offset), 0)
 
 def draw_fruit(screen, fruit_pos, velocity, t, ai=False):
@@ -258,6 +276,7 @@ class ARGS():
 # AI specific imports
 if __name__ == '__main__':
     ai = False
+    ai_path = 'saves'
     version = 0
     agent = False
     map_set = False
@@ -287,14 +306,19 @@ if __name__ == '__main__':
             except:
                 pass
 
-        if arg[0:6] == '--size':
+        elif arg[0:6] == '--path':
+            ai_path = arg[7:]
+            if ai_path[-1] == '/':
+                ai_path = ai_path[:-1]
+
+        elif arg[0:6] == '--size':
             try:
                 map_size = int(arg[7:])
                 map_set = True
             except:
                 pass
 
-        if arg[0:7] == '--debug':
+        elif arg[0:7] == '--debug':
             debug = True
 
     if ai == True:
@@ -311,10 +335,10 @@ if __name__ == '__main__':
         from PIL import Image
         from train import state_tensor
 
-        agent = Agent(final_epsilon=0.05, fixed_epsilon=True)
+        agent = Agent(final_epsilon=0.01, fixed_epsilon=True)
         try:
-            num = load_checkpoint("saves", agent, version=version)
-            print('loaded version {}'.format(num))
+            num = load_checkpoint(ai_path, agent, version=version)
+            print('loaded version {} from {}'.format(num, ai_path))
         except:
             print("could not load an ai, have you trained one?")
             sys.exit()
@@ -489,12 +513,20 @@ def main(agent):
                 velocity = collide_wall(game_map, map_size, snake_pos, velocity)
                 fruit_pos, length = collide_fruit(snake_pos, length, fruit_pos, game_map, map_size)
 
+                # initial reward
+                reward = 0
+
                 # if growth
                 if length - last_length > 0:
                     # increase speed
                     if agent == False:
                         move_rate -= (move_rate * 0.05)
                     last_length = length
+                    reward = 1
+
+                # if death
+                if velocity == 0:
+                    reward = -1
 
                 # move - timing
                 last_move = t
@@ -511,7 +543,7 @@ def main(agent):
                     draw_map(screen, game_map, map_size, fill_val + 2)
                     draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
                     draw_fruit(screen, fruit_pos, velocity, t, ai=True)
-                    draw_snake(screen, snake_pos, length, velocity, t, ai=True)
+                    draw_snake(screen, snake_pos, length, velocity, t, ai=True, reward=reward)
                     pygame.display.flip()
 
                     # Debug
@@ -576,7 +608,7 @@ def main(agent):
                 else:
                     draw_score(sqr_size, str(length - 3), score_font, screen, velocity, t, ai=True)
                     draw_fruit(screen, fruit_pos, velocity, t, ai=True)
-                    draw_snake(screen, snake_pos, length, velocity, t, ai=True)
+                    draw_snake(screen, snake_pos, length, velocity, t, ai=True, reward=reward)
 
             # death notice
             elif agent == False:
