@@ -30,5 +30,20 @@ To play snake, run snake.py.
 | --debug         | --debug       | This triggers a blocking a mode and prints debug information on death.|
 | --path={PATH}   | --path=saves  | This points the save loader to a directory to load from               |
 
+To train the agent, run train.py.
+
+| Argument        | Example       | Description                                                           |
+| ----------------|:-------------:| ---------------------------------------------------------------------:|
+| --explot        |               | Switches to a low decaying epsilon. (Experimental)                    |
+
+To analyse an agent's history, run analyse.py
+
+| Argument        | Example       | Description                                                           |
+| ----------------|:-------------:| ---------------------------------------------------------------------:|
+| -i={INTERVAL}   | -i=1000       | Specify's the version interval for analysis.                          |
+| -p={PATH}       | -p=saves      | The path to load histories from.                                      |
+| -n={TRIALS}     | -n=100        | The number of trials to perform for a given agent version.            |
+| --plot          | --plot        | To solely plot the analysis file of a given path.
+
 ## Results 
 *in progress*
