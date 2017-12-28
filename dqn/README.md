@@ -27,7 +27,7 @@ To play snake, run snake.py.
 |                 | --ai=2000     | The following number represents the trained episode version to load.  |
 |                 | --ai=2k       | Alternatively, k will be parsed as a thousand.                        |
 |                 | --ai=2m       | Likewise m will be parsed as a million.                               |
-| --debug         | --debug       | This triggers a blocking a mode and display debug information         |
+| --debug         | --debug       | This triggers a blocking a mode and prints debug information on death.|
 | --path={PATH}   | --path=saves  | This points the save loader to a directory to load from               |
 
 ## Results 
