@@ -479,6 +479,8 @@ def main(agent):
 
         # AI - action
         if agent != False:
+
+            # Debug - grabs q values directly
             if debug:
                 desired, q_vals = agent.select_action(state_tensor(screen), debug=True)
                 desired_text = 'no change in direction'
@@ -494,6 +496,8 @@ def main(agent):
                 if desired == left and body_direction != right:
                     direction = left
                     desired_text = 'left'
+
+            # Standard
             else:
                 desired = agent.select_action(state_tensor(screen))
                 if desired == up and body_direction != down:
