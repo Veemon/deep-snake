@@ -81,15 +81,19 @@ class DQN(nn.Module):
         return v + a
 
 class Agent:
-    def __init__(self, capacity=0, batch_size=0, num_episodes=1, gamma=0.999, lr=0.1,
+    def __init__(self, capacity=0, batch_size=0, gamma=0.999,
+                init_lr=0.1, final_lr=0.1, lr_decay=0, epsilon_decay=0,
                 net_switch=2, final_epsilon=0.1, fixed_epsilon=False):
 
         # members
         self.capacity = capacity
         self.batch_size = batch_size
-        self.num_episodes = num_episodes
-        self.net_switch = net_switch
         self.gamma = gamma
+        self.init_lr = init_lr
+        self.final_lr = final_lr
+        self.lr_decay = lr_decay
+        self.epsilon_decay = epsilon_decay
+        self.net_switch = net_switch
         self.final_epsilon = final_epsilon
         self.fixed_epsilon = fixed_epsilon
 
@@ -99,10 +103,9 @@ class Agent:
         self.primary = DQN().cuda()
         self.target = DQN().cuda()
 
-        self.optimizer = optim.RMSprop(self.primary.parameters(), lr=lr)
-
         # inner
         self.init_epsilon = 0.9
+        self.lr = init_lr
         self.epsilon = 0
 
         self.num_epochs = 0
@@ -111,7 +114,7 @@ class Agent:
         # epsilon annealing
         if self.fixed_epsilon == False:
             epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
-            epsilon_clip *= math.exp(-1. * self.num_epochs / self.num_episodes)
+            epsilon_clip *= math.exp(-1. * self.num_epochs / self.epsilon_decay)
             if epsilon_clip < self.final_epsilon:
                 epsilon_clip = self.final_epsilon
         else:
@@ -143,6 +146,15 @@ class Agent:
         else:
             self.num_epochs += 1
 
+        # learning rate decay
+        this_lr = self.final_lr + (self.init_lr - self.final_lr)
+        this_lr *= math.exp(-1. * self.num_epochs / self.lr_decay)
+        if this_lr < self.final_lr:
+            this_lr = self.final_lr
+
+        # save for plotting
+        self.lr = this_lr
+
         # get batch sample
         samples = self.memory.sample(self.batch_size)
         batch = Transition(*zip(*samples))
@@ -165,22 +177,23 @@ class Agent:
 
         # compute Q(s',a') via target network
         q1 = Variable(torch.zeros(self.batch_size).type(torch.cuda.FloatTensor).add(-1))
-        q1[terminal_mask] = torch.clamp(self.target(s1).max(1)[0], min=-1.0, max=1.0)
+        q1[terminal_mask] = self.target(s1).max(1)[0]
         q1.volatile = False
 
         # discounted reward
         q1[terminal_mask] = (q1[terminal_mask] * self.gamma) + r[terminal_mask]
-        target = q1.clone()
+        q1 = torch.clamp(q1, min=-1.0, max=1.0)
 
         # compute loss
-        loss = nn.functional.smooth_l1_loss(q, target)
+        loss = nn.functional.smooth_l1_loss(q, q1)
 
         # optimize
-        self.optimizer.zero_grad()
+        optimizer = optim.RMSprop(self.primary.parameters(), this_lr)
+        optimizer.zero_grad()
         loss.backward()
         for param in self.primary.parameters():
             param.grad.data.clamp_(-1, 1)
-        self.optimizer.step()
+        optimizer.step()
 
         # update target network
         if self.num_epochs % self.net_switch == 0:

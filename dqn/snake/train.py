@@ -97,41 +97,47 @@ def live_plot(in_x, fig, title):
 loss_values = []
 epsiode_rewards = []
 epsilon_values = []
+lr_values = []
 
 def train():
     # training parameters
-    checkpoint = 1000
-
-    batch_size = 128
-    num_epochs = 200000
-    decay_epoch = 350000
-
     net_switch = 30
+    batch_size = 128
 
-    gamma = 0.65
-    lr = 0.001
+    checkpoint = 1000
+    num_epochs = 200000
+
+    init_lr = 0.01
+    final_lr = 0.0001
+    lr_decay_cycle = 800000
 
     final_epsilon = 0.01
+    epsilon_decay_cycle = 600000
 
     # counters
     global loss_values
     global epsiode_rewards
     global epsilon_values
+    global lr_values
 
     # initialize agent
     agent = Agent(capacity=4096,
                     batch_size=batch_size,
-                    num_episodes=decay_epoch,
-                    gamma=gamma,
-                    lr=lr,
+                    init_lr=init_lr,
+                    final_lr=final_lr,
+                    lr_decay=lr_decay_cycle,
                     final_epsilon=final_epsilon,
+                    epsilon_decay=epsilon_decay_cycle,
                     net_switch=net_switch)
 
     # CLI
+    plotter = False
     exploit = False
     for arg in sys.argv:
         if arg == '--exploit':
             exploit = True
+        elif arg == '--plot':
+            plotter = True
 
     # load previous checkpoint
     epoch_offset = 0
@@ -258,14 +264,17 @@ def train():
 
             # optimize
             l = agent.optimize()
-            if l is not None:
+            if l is not None and plotter:
                 loss_values.append(l)
             if velocity == 0:
-                epsiode_rewards.append(max_reward)
-                epsilon_values.append(agent.epsilon)
-                live_plot(loss_values, 1, 'loss')
-                live_plot(epsiode_rewards, 2, 'episode max rewards')
-                live_plot(epsilon_values, 3, 'epsilon')
+                if plotter:
+                    epsiode_rewards.append(max_reward)
+                    epsilon_values.append(agent.epsilon)
+                    lr_values.append(agent.lr)
+                    live_plot(loss_values, 1, 'loss')
+                    live_plot(epsiode_rewards, 2, 'episode max rewards')
+                    live_plot(epsilon_values, 3, 'epsilon')
+                    live_plot(lr_values, 4, 'learning rate')
                 break
 
         # save model
