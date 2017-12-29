@@ -34,7 +34,8 @@ To train the agent, run train.py.
 
 | Argument        | Example       | Description                                                           |
 | ----------------|:-------------:| ---------------------------------------------------------------------:|
-| --explot        |               | Switches to a low decaying epsilon. (Experimental)                    |
+| --exploit       | --exploit     | Switches to a low decaying epsilon. (Experimental)                    |
+| --plot          | --plot        | Enables experiment plotting, reduces speed noticeably.                |
 
 To analyse an agent's history, run analyse.py
 
