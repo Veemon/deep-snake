@@ -103,30 +103,27 @@ class Agent:
         self.primary = DQN().cuda()
         self.target = DQN().cuda()
 
-        self.optimizer = optim.Adam(self.primary.parameters(), lr=init_lr)
+        self.optimizer = optim.RMSprop(self.primary.parameters(), lr=init_lr)
 
         # inner
         self.init_epsilon = 0.9
-        self.lr = init_lr
-        self.epsilon = 0
-
         self.num_epochs = 0
+
+        self.lr = init_lr
+        self.epsilon = self.init_epsilon
 
     def select_action(self,state, debug=False):
         # epsilon annealing
         if self.fixed_epsilon == False:
-            epsilon_clip = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
-            epsilon_clip *= math.exp(-1. * self.num_epochs / self.epsilon_decay)
-            if epsilon_clip < self.final_epsilon:
-                epsilon_clip = self.final_epsilon
+            self.epsilon = self.final_epsilon + (self.init_epsilon - self.final_epsilon)
+            self.epsilon *= math.exp(-1. * self.num_epochs / self.epsilon_decay)
+            if self.epsilon < self.final_epsilon:
+                self.epsilon = self.final_epsilon
         else:
-            epsilon_clip = self.final_epsilon
-
-        # update for graphing
-        self.epsilon = epsilon_clip
+            self.epsilon = self.final_epsilon
 
         # choice
-        if random.random() > epsilon_clip:
+        if random.random() > self.epsilon:
             state = Variable(state, volatile=True).cuda()
             q_vals = self.primary(state).cpu()
             choice = q_vals.data.max(1)[1].view(1, 1)
@@ -149,17 +146,14 @@ class Agent:
             self.num_epochs += 1
 
         # learning rate decay
-        this_lr = self.final_lr + (self.init_lr - self.final_lr)
-        this_lr *= math.exp(-1. * self.num_epochs / self.lr_decay)
-        if this_lr < self.final_lr:
-            this_lr = self.final_lr
+        self.lr = self.final_lr + (self.init_lr - self.final_lr)
+        self.lr *= math.exp(-1. * self.num_epochs / self.lr_decay)
+        if self.lr < self.final_lr:
+            self.lr = self.final_lr
 
         # update optimizer
         for param_group in self.optimizer.param_groups:
-            param_group['lr'] = this_lr
-
-        # save for plotting
-        self.lr = this_lr
+            param_group['lr'] = self.lr
 
         # get batch sample
         samples = self.memory.sample(self.batch_size)

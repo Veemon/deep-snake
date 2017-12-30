@@ -550,7 +550,7 @@ def main(agent):
                     draw_snake(screen, snake_pos, length, velocity, t, ai=True, reward=reward)
                     pygame.display.flip()
 
-                    # Debug
+                    # Debug - just died
                     if debug:
                         try:
                             if None not in q_vals:
@@ -622,6 +622,26 @@ def main(agent):
                 draw_dead(sqr_size, n_labels, label_size, labels, screen)
 
             pygame.display.flip()
+
+            # Debug - got apple
+            if agent != False and debug:
+                if reward == 1:
+                    try:
+                        if None not in q_vals:
+                            print('\nDeath: Desired - {}'.format(desired_text))
+                            print('up:\t{}'.format(q_vals[up].data.numpy()[0]))
+                            print('down:\t{}'.format(q_vals[down].data.numpy()[0]))
+                            print('left:\t{}'.format(q_vals[left].data.numpy()[0]))
+                            print('right:\t{}'.format(q_vals[right].data.numpy()[0]))
+                        else:
+                            print("Death: Random action.")
+                    except:
+                        print('\nDeath: Desired - {}'.format(desired_text))
+                        print('up:\t{}'.format(q_vals[up].data.numpy()[0]))
+                        print('down:\t{}'.format(q_vals[down].data.numpy()[0]))
+                        print('left:\t{}'.format(q_vals[left].data.numpy()[0]))
+                        print('right:\t{}'.format(q_vals[right].data.numpy()[0]))
+                    input()
 
             # title
             if len(frame_times) >= 10:

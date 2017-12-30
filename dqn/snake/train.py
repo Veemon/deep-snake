@@ -101,18 +101,20 @@ lr_values = []
 
 def train():
     # training parameters
-    net_switch = 25
+    net_switch = 50
     batch_size = 256
 
     checkpoint = 1000
-    num_epochs = 600000
+    num_epochs = 200000
 
-    init_lr = 0.01
+    init_lr = 0.001
     final_lr = 0.0001
-    lr_decay_cycle = 2400000
+    lr_decay_cycle = 350000
 
     final_epsilon = 0.01
-    epsilon_decay_cycle = 1800000
+    epsilon_decay_cycle = 350000
+
+    gamma = 0.65
 
     # counters
     global loss_values
@@ -128,7 +130,8 @@ def train():
                     lr_decay=lr_decay_cycle,
                     final_epsilon=final_epsilon,
                     epsilon_decay=epsilon_decay_cycle,
-                    net_switch=net_switch)
+                    net_switch=net_switch,
+                    gamma=gamma)
 
     # CLI
     plotter = False
@@ -275,6 +278,12 @@ def train():
                     live_plot(epsiode_rewards, 2, 'episode max rewards')
                     live_plot(epsilon_values, 3, 'epsilon')
                     live_plot(lr_values, 4, 'learning rate')
+                else:
+                    if epoch % 100 == 0:
+                        ep_str = format(agent.epsilon, '.2f')
+                        lr_str = format(agent.lr, '.5f')
+                        loss_str = format(l, '.7') if l is not None else ""
+                        print("ep: {}  lr: {}   loss: {}".format(ep_str, lr_str, loss_str))
                 break
 
         # save model
