@@ -103,7 +103,7 @@ class Agent:
         self.primary = DQN().cuda()
         self.target = DQN().cuda()
 
-        self.optimizer = optim.RMSprop(self.primary.parameters(), lr=init_lr)
+        self.optimizer = optim.Adam(self.primary.parameters(), lr=init_lr)
 
         # inner
         self.init_epsilon = 0.9

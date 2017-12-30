@@ -480,34 +480,28 @@ def main(agent):
         # AI - action
         if agent != False:
 
+            # Standard
+            desired, q_vals = agent.select_action(state_tensor(screen), debug=True)
+            if desired == up and body_direction != down:
+                direction = up
+            if desired == right and body_direction != left:
+                direction = right
+            if desired == down and body_direction != up:
+                direction = down
+            if desired == left and body_direction != right:
+                direction = left
+
             # Debug - grabs q values directly
             if debug:
-                desired, q_vals = agent.select_action(state_tensor(screen), debug=True)
                 desired_text = 'no change in direction'
                 if desired == up and body_direction != down:
-                    direction = up
                     desired_text = 'up'
                 if desired == right and body_direction != left:
-                    direction = right
                     desired_text = 'right'
                 if desired == down and body_direction != up:
-                    direction = down
                     desired_text = 'down'
                 if desired == left and body_direction != right:
-                    direction = left
                     desired_text = 'left'
-
-            # Standard
-            else:
-                desired = agent.select_action(state_tensor(screen))
-                if desired == up and body_direction != down:
-                    direction = up
-                if desired == right and body_direction != left:
-                    direction = right
-                if desired == down and body_direction != up:
-                    direction = down
-                if desired == left and body_direction != right:
-                    direction = left
 
         if(t >= last_t + tick_rate):
             if(t >= last_move + move_rate):
@@ -517,10 +511,8 @@ def main(agent):
                 velocity = collide_wall(game_map, map_size, snake_pos, velocity)
                 fruit_pos, length = collide_fruit(snake_pos, length, fruit_pos, game_map, map_size)
 
-                # initial reward
-                reward = 0
-
                 # if growth
+                reward = 0
                 if length - last_length > 0:
                     # increase speed
                     if agent == False:
