@@ -103,6 +103,8 @@ class Agent:
         self.primary = DQN().cuda()
         self.target = DQN().cuda()
 
+        self.optimizer = optim.Adam(self.primary.parameters(), lr=init_lr)
+
         # inner
         self.init_epsilon = 0.9
         self.lr = init_lr
@@ -152,6 +154,10 @@ class Agent:
         if this_lr < self.final_lr:
             this_lr = self.final_lr
 
+        # update optimizer
+        for param_group in self.optimizer.param_groups:
+            param_group['lr'] = this_lr
+
         # save for plotting
         self.lr = this_lr
 
@@ -188,12 +194,11 @@ class Agent:
         loss = nn.functional.smooth_l1_loss(q, q1)
 
         # optimize
-        optimizer = optim.RMSprop(self.primary.parameters(), this_lr)
-        optimizer.zero_grad()
+        self.optimizer.zero_grad()
         loss.backward()
         for param in self.primary.parameters():
             param.grad.data.clamp_(-1, 1)
-        optimizer.step()
+        self.optimizer.step()
 
         # update target network
         if self.num_epochs % self.net_switch == 0:

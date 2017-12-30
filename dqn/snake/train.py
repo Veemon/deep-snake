@@ -101,18 +101,18 @@ lr_values = []
 
 def train():
     # training parameters
-    net_switch = 30
-    batch_size = 128
+    net_switch = 25
+    batch_size = 256
 
     checkpoint = 1000
-    num_epochs = 200000
+    num_epochs = 600000
 
     init_lr = 0.01
     final_lr = 0.0001
-    lr_decay_cycle = 800000
+    lr_decay_cycle = 2400000
 
     final_epsilon = 0.01
-    epsilon_decay_cycle = 600000
+    epsilon_decay_cycle = 1800000
 
     # counters
     global loss_values
@@ -264,10 +264,10 @@ def train():
 
             # optimize
             l = agent.optimize()
-            if l is not None and plotter:
+            if l is not None and plotter == True:
                 loss_values.append(l)
             if velocity == 0:
-                if plotter:
+                if plotter == True:
                     epsiode_rewards.append(max_reward)
                     epsilon_values.append(agent.epsilon)
                     lr_values.append(agent.lr)
