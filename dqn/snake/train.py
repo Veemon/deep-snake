@@ -105,16 +105,16 @@ def train():
     batch_size = 256
 
     checkpoint = 1000
-    num_epochs = 200000
+    num_epochs = 800000
 
-    init_lr = 0.001
+    init_lr = 0.01
     final_lr = 0.0001
-    lr_decay_cycle = 350000
+    lr_decay_cycle = 2600000
 
     final_epsilon = 0.01
-    epsilon_decay_cycle = 350000
+    epsilon_decay_cycle = 1800000
 
-    gamma = 0.65
+    gamma = 0.85
 
     # counters
     global loss_values
