@@ -139,7 +139,7 @@ def draw_dead(sqr_size, n_labels, label_size, labels, screen):
     y_centers = []
     for i in range(n_labels):
         x_centers.append(sqr_size/2 - (label_size[i][0]/2))
-        y_centers.append(sqr_size/2 - (label_size[i][1]/2))
+        y_centers.append(sqr_size/2 - (label_size[i][1]/4))
 
 
     # blit render
@@ -367,9 +367,9 @@ def main(agent):
     initialise_map(game_map, map_size)
 
     # Font
-    score_font = pygame.font.Font("font/Monoton-Regular.ttf", 160)
-    font_top = pygame.font.Font("font/Monoton-Regular.ttf", 90)
-    font_bot = pygame.font.Font("font/Monoton-Regular.ttf", 40)
+    score_font = pygame.font.Font("font/Monoton-Regular.ttf", 140)
+    font_top = pygame.font.Font("font/Monoton-Regular.ttf", 70)
+    font_bot = pygame.font.Font("font/Monoton-Regular.ttf", 24)
     label_text = ['dead', 'enter-retry', 'escape-exit']
 
     aa = 10000
@@ -516,7 +516,7 @@ def main(agent):
                 if length - last_length > 0:
                     # increase speed
                     if agent == False:
-                        move_rate -= (move_rate * 0.05)
+                        move_rate -= (move_rate * 0.01)
                     last_length = length
                     reward = 1
 
