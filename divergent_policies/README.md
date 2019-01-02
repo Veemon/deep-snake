@@ -104,6 +104,15 @@ It is known that at the beginning of an agents training, actions made will be es
 
 ## Results and Discussion
 
+As expected of a greedy algorithm, some of the replays show a lack of planning, creating inescapable paths and so on. Given an expected value term, like those used in other methods, it is speculated to alleviate this issue and converge to a more fruitful region. It is the terminations due to sudden collisions with the exterior wall however, that lead me to believe these "_instinctual_" methods are more problematic than accounted for.
+
+Consider instead an agent that performs the scientific method:
+* searches for truths (_rules_) about their environment
+* sufficiently tries to contradict their beliefs
+* then finally, maximises some future expected reward 
+
+It is with this, an agent that pragmatically and abstractly reasons, that I believe will lead to a more genuine sence of the term, artifically intelligent. In theory it should be able to learn these rules, and learn relationships between its own rules to come up with new emergent rules, internally. For now however, perhaps a network-in-network approach may be beneficial, say arbitrarily some conditional GAN to model the world with mote-carlo rollouts, an added curiosity metric applied to its value head, _etc_. Regardless of what direction is taken, _ultimately I believe there is a fundamentally better framework to be found_. 
+
 <p align="center">
   <img src="eval/steps_1400k_game_2_size_8x10_score_18.gif" width="200">
   <img src="eval/steps_1400k_game_4_size_8x9_score_13.gif"   width="200">
@@ -117,12 +126,3 @@ It is known that at the beginning of an agents training, actions made will be es
   <img src="eval/steps_1400k_game_6_size_10x8_score_13.gif" width="200">  
   <img src="eval/steps_1400k_game_7_size_10x9_score_19.gif" width="200">  
 </p>
-
-As expected of a greedy algorithm, some of the replays show a lack of planning, creating inescapable paths and so on. Given an expected value term, like those used in other methods, it is speculated to alleviate this issue and converge to a more fruitful region. It is the terminations due to sudden collisions with the exterior wall however, that lead me to believe these "_instinctual_" methods are more problematic than accounted for.
-
-Consider instead an agent that performs the scientific method:
-* searches for truths (_rules_) about their environment
-* sufficiently tries to contradict their beliefs
-* then finally, maximises some future expected reward 
-
-It is with this, an agent that pragmatically and abstractly reasons, that I believe will lead to a more genuine sence of the term, artifically intelligent. In theory it should be able to learn these rules, and learn relationships between its own rules to come up with new emergent rules, internally. For now however, perhaps a network-in-network approach may be beneficial, say arbitrarily some conditional GAN to model the world with mote-carlo rollouts, an added curiosity metric applied to its value head, _etc_. Regardless of what direction is taken, _ultimately I believe there is a fundamentally better framework to be found_. 
