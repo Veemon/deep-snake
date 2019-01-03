@@ -1,5 +1,7 @@
 # Divergent Policies
 
+## This is still being actively trained, thus results are subject to change.
+
 ## Training and Evaluation
 
 To perform training, the **mode** must be set to *train*, and the weights folder specified. Here it is specified as exports. This is where model checkpoints will be stored.
@@ -111,7 +113,7 @@ Consider instead an agent that performs the scientific method:
 * sufficiently tries to contradict their beliefs
 * then finally, maximises some future expected reward 
 
-It is with this, an agent that pragmatically and abstractly reasons, that I believe will lead to a more genuine sence of the term, artifically intelligent. In theory it should be able to learn these rules, and learn relationships between its own rules to come up with new emergent rules, internally. For now however, perhaps a network-in-network approach may be beneficial, say arbitrarily some conditional GAN to model the world with mote-carlo rollouts, an added curiosity metric applied to its value head, _etc_. Regardless of what direction is taken, _ultimately I believe there is a fundamentally better framework to be found_. 
+It is with this, an agent that pragmatically and abstractly reasons, that I believe will lead to a more genuine sence of the term, artifically intelligent. In theory it should be able to learn these rules, and learn relationships between its own rules to come up with new emergent rules, internally. Regardless of what direction is taken, _ultimately I believe there is a fundamentally better framework to be found_. 
 
 <p align="center">
   <img src="eval/steps_1400k_game_2_size_8x10_score_18.gif" width="200">
