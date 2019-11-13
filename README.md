@@ -1,5 +1,7 @@
 # deep-snake
 
+**Update:** _I've been reading a lot more since I first started this thing. In 2020 all, if not most, of this repository will be replaced._
+
 Latest Experiment: [divergent policies](divergent_policies)
 
 These are a collection of algorithms for learning the game of snake primarily.
