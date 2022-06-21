@@ -1,5 +1,5 @@
 colorama==0.4.1
 matplotlib==3.0.2
-numpy==1.14.6+mkl
+numpy==1.22.0rc1
 torch==1.0.0
 tqdm==4.28.1
